@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinTrack — Expense Tracker</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="loader-overlay" id="loader"><div class="loader"></div></div>
+<div class="notif-stack" id="notifs"></div>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">💰</div>
+      <h1>Expense-Track</h1>
+    </div>
+    <button class="nav-btn active" data-page="dashboard"><span class="nav-icon">📊</span>Dashboard</button>
+    <button class="nav-btn" data-page="add"><span class="nav-icon">➕</span>Add Expense</button>
+    <button class="nav-btn" data-page="transactions"><span class="nav-icon">📋</span>Transactions</button>
+    <button class="nav-btn" data-page="analytics"><span class="nav-icon">📈</span>Analytics</button>
+    <button class="nav-btn" data-page="budget"><span class="nav-icon">🎯</span>Budget</button>
+    <button class="nav-btn" data-page="savings"><span class="nav-icon">🏆</span>Savings</button>
+    <button class="nav-btn" data-page="reports"><span class="nav-icon">📑</span>Reports</button>
+    <button class="nav-btn" data-page="settings"><span class="nav-icon">⚙️</span>Settings</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="icon-btn menu-btn" id="menuBtn">☰</button>
+        <h2 id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-box"><input id="globalSearch" placeholder="Search transactions..."/></div>
+        <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="cards">
+        <div class="glass stat balance"><div class="label">Total Balance</div><div class="value" data-counter id="statBalance">$0</div><div class="icon">💼</div></div>
+        <div class="glass stat income"><div class="label">Total Income</div><div class="value" data-counter id="statIncome">$0</div><div class="icon">📈</div></div>
+        <div class="glass stat expense"><div class="label">Total Expenses</div><div class="value" data-counter id="statExpense">$0</div><div class="icon">📉</div></div>
+        <div class="glass stat savings"><div class="label">Savings</div><div class="value" data-counter id="statSavings">$0</div><div class="icon">🏦</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="glass chart-card"><h3>Monthly Summary</h3><canvas id="dashMonthly"></canvas></div>
+        <div class="glass chart-card"><h3>Spending Categories</h3><canvas id="dashPie"></canvas></div>
+      </div>
+      <div class="glass">
+        <h3 style="margin-bottom:10px">Recent Transactions</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Name</th><th>Category</th><th>Date</th><th>Amount</th></tr></thead><tbody id="recentTx"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADD -->
+    <section class="page" id="page-add">
+      <div class="glass">
+        <h3 style="margin-bottom:14px">Add New Transaction</h3>
+        <div class="form-grid">
+          <div><label>Transaction Name</label><input id="txName" placeholder="e.g. Groceries"/></div>
+          <div><label>Amount</label><input id="txAmount" type="number" placeholder="0.00" step="0.01"/></div>
+          <div><label>Category</label><select id="txCategory">
+            <option>Food</option><option>Transport</option><option>Shopping</option><option>Bills</option>
+            <option>Entertainment</option><option>Health</option><option>Education</option><option>Salary</option>
+            <option>Investment</option><option>Other</option>
+          </select></div>
+          <div><label>Date</label><input id="txDate" type="date"/></div>
+          <div><label>Type</label>
+            <div class="toggle">
+              <button class="active" data-type="expense">Expense</button>
+              <button data-type="income">Income</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:18px"><button class="btn" id="addTxBtn">Add Transaction</button></div>
+      </div>
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section class="page" id="page-transactions">
+      <div class="glass">
+        <div class="form-grid" style="margin-bottom:14px">
+          <div><label>Search</label><input id="txSearch" placeholder="Search by name..."/></div>
+          <div><label>Category</label><select id="txFilterCat"><option value="">All Categories</option></select></div>
+          <div><label>Date</label><input id="txFilterDate" type="date"/></div>
+          <div><label>Sort by Amount</label><select id="txSort"><option value="none">Default</option><option value="desc">High to Low</option><option value="asc">Low to High</option></select></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Category</th><th>Date</th><th>Type</th><th>Amount</th><th>Actions</th></tr></thead>
+            <tbody id="txTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="page" id="page-analytics">
+      <div class="charts-grid">
+        <div class="glass chart-card"><h3>Category Spending (Bar)</h3><canvas id="chartBar"></canvas></div>
+        <div class="glass chart-card"><h3>Category Distribution (Pie)</h3><canvas id="chartPie"></canvas></div>
+        <div class="glass chart-card"><h3>Savings Trend</h3><canvas id="chartTrend"></canvas></div>
+        <div class="glass chart-card"><h3>Monthly Spending</h3><canvas id="chartMonthly"></canvas></div>
+        <div class="glass chart-card"><h3>Income vs Expense</h3><canvas id="chartCompare"></canvas></div>
+        <div class="glass chart-card"><h3>Category-wise Expense</h3><canvas id="chartCatExp"></canvas></div>
+      </div>
+    </section>
+
+    <!-- BUDGET -->
+    <section class="page" id="page-budget">
+      <div class="glass">
+        <h3 style="margin-bottom:14px">Monthly Budget Planning</h3>
+        <div class="form-grid">
+          <div><label>Set Monthly Budget</label><input id="budgetInput" type="number" placeholder="0.00"/></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn" id="setBudgetBtn">Save Budget</button></div>
+        </div>
+        <div style="margin-top:20px">
+          <div style="display:flex;justify-content:space-between"><span>Spent this month</span><span id="budgetSpent">$0</span></div>
+          <div class="progress"><div class="bar" id="budgetBar"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <span>Budget: <strong id="budgetTotal">$0</strong></span>
+            <span>Remaining: <strong id="budgetRemain">$0</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAVINGS -->
+    <section class="page" id="page-savings">
+      <div class="glass">
+        <h3 style="margin-bottom:14px">Savings Goal Tracker</h3>
+        <div class="form-grid">
+          <div><label>Savings Goal</label><input id="goalInput" type="number" placeholder="0.00"/></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn" id="setGoalBtn">Save Goal</button></div>
+        </div>
+        <div style="margin-top:20px;text-align:center">
+          <div id="goalEmoji" style="font-size:64px">🎯</div>
+          <div style="font-size:28px;font-weight:700;margin:6px 0" id="goalPct">0%</div>
+          <div class="progress"><div class="bar" id="goalBar"></div></div>
+          <div style="margin-top:8px">Saved <strong id="goalSaved">$0</strong> of <strong id="goalTotal">$0</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="page" id="page-reports">
+      <div class="cards">
+        <div class="glass stat"><div class="label">This Week</div><div class="value" id="reportWeek">$0</div><div class="icon">📅</div></div>
+        <div class="glass stat"><div class="label">This Month</div><div class="value" id="reportMonth">$0</div><div class="icon">🗓️</div></div>
+        <div class="glass stat"><div class="label">This Year</div><div class="value" id="reportYear">$0</div><div class="icon">📆</div></div>
+      </div>
+      <div class="glass">
+        <h3 style="margin-bottom:14px">Generate Report</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" data-report="week">Download Weekly PDF</button>
+          <button class="btn" data-report="month">Download Monthly PDF</button>
+          <button class="btn" data-report="year">Download Yearly PDF</button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- SETTINGS -->
+    <section class="page" id="page-settings">
+      <div class="glass">
+        <h3 style="margin-bottom:14px">Settings</h3>
+        <div class="form-grid">
+          <div><label>Currency Symbol</label><input id="currencyInput" value="$" maxlength="3"/></div>
+          <div><label>Theme</label>
+            <div class="toggle">
+              <button data-theme="dark" class="active">🌙 Dark</button>
+              <button data-theme="light">☀️ Light</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="saveSettings">Save Settings</button>
+          <button class="btn danger" id="clearData">Clear All Data</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<button class="back-top" id="backTop">↑</button>
+
+<script src="script.js"></script>
+</body>
+</html>
